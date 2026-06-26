@@ -1,0 +1,21 @@
+*.pyc
+__pycache__/
+
+# PyPI packaging build directories
+dist/
+build/
+*.egg-info/
+
+# uv lockfile
+uv.lock
+
+# Temporary extraction workdir
+paper_skill_work/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
