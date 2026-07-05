@@ -193,20 +193,24 @@ paper-to-skill 适用于：
 
 ```
 paper-to-skill/
-├── SKILL.md                    # 主技能定义文件（安装此文件）
+├── SKILL.md                    # 主技能文件（精简版，含触发条件和模式摘要）
+├── references/
+│   └── workflow.md             # 完整工作流（按需加载，不占用每次 session 启动的 token）
 ├── scripts/
 │   └── extract.py              # PDF 文本提取入口
 ├── paper_to_skill/             # Python 包
 │   ├── __init__.py
 │   ├── __main__.py
-│   ├── cli.py                  # CLI 入口
+│   ├── cli.py                  # CLI 编排入口
 │   ├── config.py               # 配置常量
 │   ├── dependencies.py         # 依赖管理
 │   ├── exceptions.py           # 自定义异常
-│   ├── utils.py                # 主提取逻辑
+│   ├── resolver.py             # 参数解析 + 文件展开 + 论文结构检测
+│   ├── extractor.py            # PDF 提取编排
+│   ├── utils.py                # 向后兼容 re-export
 │   └── parsers/
 │       ├── __init__.py
-│       └── pdf.py              # PDF 提取方法
+│       └── pdf.py              # PDF 提取后端
 ├── tests/
 ├── pyproject.toml
 ├── README.md                   # 英文文档

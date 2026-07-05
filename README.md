@@ -191,20 +191,24 @@ Typical conversion: a 15-page paper → ~8K tokens total skill (loaded on-demand
 
 ```
 paper-to-skill/
-├── SKILL.md                    # The main skill definition (install this)
+├── SKILL.md                    # Main skill file (slim — trigger conditions + mode summary)
+├── references/
+│   └── workflow.md             # Full step-by-step workflow (loaded on-demand)
 ├── scripts/
 │   └── extract.py              # PDF text extraction entrypoint
 ├── paper_to_skill/             # Python package
 │   ├── __init__.py
 │   ├── __main__.py
-│   ├── cli.py                  # CLI entrypoint
+│   ├── cli.py                  # CLI orchestration entrypoint
 │   ├── config.py               # Configuration constants
 │   ├── dependencies.py         # Dependency management
 │   ├── exceptions.py           # Custom exceptions
-│   ├── utils.py                # Main extraction logic
+│   ├── resolver.py             # Argument parsing, file resolution, structure detection
+│   ├── extractor.py            # PDF extraction orchestration
+│   ├── utils.py                # Backward-compatible re-exports
 │   └── parsers/
 │       ├── __init__.py
-│       └── pdf.py              # PDF extraction methods
+│       └── pdf.py              # PDF extraction backends (pdftotext, pypdf, pdfminer, docling)
 ├── tests/
 ├── pyproject.toml
 ├── README.md

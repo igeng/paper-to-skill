@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""
-Extract text from research paper PDF files for paper-to-skill processing.
-Entrypoint wrapper.
+"""Extract text from research paper PDF files for paper-to-skill processing.
+
+Thin entrypoint: configures UTF-8 encoding, then delegates to paper_to_skill.cli.
+Works both when pip-installed (package on PYTHONPATH) and when the skill is checked
+out as a standalone git clone (sys.path fallback).
 """
 
 import os
@@ -13,9 +15,11 @@ for _stream in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
-sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-from paper_to_skill.cli import main
+try:
+    from paper_to_skill.cli import main
+except ImportError:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from paper_to_skill.cli import main
 
 if __name__ == "__main__":
     main()

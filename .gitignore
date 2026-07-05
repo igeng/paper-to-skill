@@ -12,9 +12,10 @@ uv.lock
 # Temporary extraction workdir
 paper_skill_work/
 
-# IDE
+# IDE / agent
 .vscode/
 .idea/
+.claude/
 
 # OS
 .DS_Store

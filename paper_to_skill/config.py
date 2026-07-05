@@ -15,6 +15,7 @@ WORDS_PER_TOKEN = 0.75  # approximate
 
 SUPPORTED_EXTENSIONS = {".pdf"}
 
+# Maps Python import name → pip package name (may differ, e.g. pdfminer → pdfminer.six)
 PYTHON_DEPENDENCIES = {
     "docling": "docling",
     "pypdf": "pypdf",
