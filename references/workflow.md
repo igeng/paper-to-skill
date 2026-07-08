@@ -131,25 +131,33 @@ Read `<tempdir>/paper_skill_work/metadata.json` to inspect the results.
 Read `<tempdir>/paper_skill_work/metadata.json` and present the user with an estimate **before doing any generation**:
 
 ```
-Paper(s) detected: <total_sources> paper(s)
+📄 Paper(s) detected: <total_sources> paper(s)
 <list each source filename from the sources metadata>
-Combined Pages: ~<N> | Words: ~<N> | Total tokens: ~<N>K
+📑 Combined Pages: ~<N> | Words: ~<N> | Total tokens: ~<N>K
 
-Estimated token cost (Full Conversion / Update):
+💰 Estimated token cost (Full Conversion / Update):
    Input  (reading + prompts): ~<N>K tokens
    Output (skill files generated/updated):  ~<N>K tokens
    Total:                           ~<N>K tokens
 
-Files to be generated/updated:
+   Reference prices (as of 2025):
+   Claude Sonnet 4.5 → ~$<X> USD
+   Claude Haiku 4.5  → ~$<X> USD
+
+   ⏱  Estimated time: ~<N> minutes
+
+📁 Files to be generated/updated:
    SKILL.md + section files + glossary + methods + cheatsheet
 
-Proceed with Full Conversion / Update? (or type "analyze only" to preview first)
+➡  Proceed with Full Conversion / Update? (or type "analyze only" to preview first)
 ```
 
 **How to estimate:**
 - Input tokens ≈ `estimated_tokens` from metadata × 1.3 (prompts overhead per section pass)
 - Output tokens ≈ sections × per-section budget + 4,000 (SKILL.md) + 4,500 (glossary + methods + cheatsheet)
   - Per-section budget midpoint by `PAPER_TYPE`: `text` ≈ 1,000, `technical` ≈ 1,800
+- Price: Sonnet input=$3/MTok output=$15/MTok — Haiku input=$0.80/MTok output=$4/MTok
+- Time: ~30–60s per section for generation; extraction time varies by PDF size
 
 Wait for the user to confirm before proceeding. If they say "analyze only", switch to Mode 2.
 
