@@ -46,7 +46,7 @@ Invoke `paper-to-skill` when the user:
 | **Generate from Analysis** | User has prior analysis notes | Skill files built from provided analysis |
 | **Update / Fold-in** | New PDFs + existing skill directory | Updated existing skill with new papers merged |
 
-## Quick Usage
+## Quick Usage — Single Paper
 
 ```
 User: paper-to-skill ~/papers/attention-is-all-you-need.pdf
@@ -59,6 +59,54 @@ Agent: [extracts and reports analysis only, no files written]
 User: paper-to-skill ~/papers/new-paper.pdf existing-skill-name
 Agent: [detects existing skill, enters Update/Fold-in mode]
 ```
+
+## Batch Processing — Folder of Papers
+
+When the user points at a **folder** (not a single file), we need to decide: one combined skill or one skill per paper?
+
+### Detection
+
+A folder input triggers the batch decision. The agent MUST pause and ask:
+
+> "This folder contains <N> PDFs. How should I process them?
+>
+> 1. **One skill per paper** — each paper gets its own skill directory. Best for independent papers with different topics.
+> 2. **One combined skill** — all papers merged into a single skill with cross-references. Best for papers on the same topic (e.g. a literature review collection).
+> 3. **Let me pick** — show me the list, I'll choose which to convert."
+
+### One Skill Per Paper
+
+Each paper becomes `$SKILLS_HOME/<paper-slug>/`:
+```
+~/.claude/skills/
+├── vaswani-attention/          # Paper 1 → skill
+│   ├── SKILL.md
+│   ├── sections/...
+│   ├── glossary.md
+│   ├── methods.md
+│   └── cheatsheet.md
+├── he-resnet/                  # Paper 2 → skill
+│   └── ...
+└── devlin-bert/                # Paper 3 → skill
+    └── ...
+```
+Call each by name: "Ask `vaswani-attention` about the self-attention formula."
+
+### One Combined Skill
+
+All papers become one skill at `$SKILLS_HOME/<folder-slug>/`:
+```
+~/.claude/skills/llm-literature-review/
+├── SKILL.md                    # Cross-paper synthesis
+├── sections/
+│   ├── 01-vaswani-attention.md   # Paper 1 as a section
+│   ├── 02-devlin-bert.md         # Paper 2 as a section
+│   └── ...
+├── glossary.md                 # Merged terms
+├── methods.md                  # All methods across papers
+└── cheatsheet.md               # Cross-paper comparison tables
+```
+Call with a topic: "Ask `llm-literature-review` how different papers handle positional encoding."
 
 ## Skill Destination
 

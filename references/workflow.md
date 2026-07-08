@@ -25,6 +25,22 @@
 **Action:** Run Step 0, Step 1, Step 1.5, Step 2. Then skip to Step 5 and run the **Update / Fold-in Workflow**.
 **Output:** Updated existing skill with new papers merged in.
 
+### 5. Batch Processing (Folder of Papers)
+**Trigger:** User provides a directory path (not individual files) that contains multiple PDFs
+**Action:** Run Step 0 (detect batch), Step 0.5 (batch strategy prompt), then for each paper run Steps 1–10 in sequence.
+**Output:** Multiple skills (one per paper) or one combined skill, depending on user choice.
+
+**Strategy decision — BLOCKING.** The agent MUST pause and ask:
+> "This folder contains `<N>` PDFs. How should I process them?
+>
+> 1. **One skill per paper** — each paper becomes its own skill directory. Best for independent papers.
+> 2. **One combined skill** — all papers merged into a single skill. Best for papers on the same topic.
+> 3. **Let me pick** — show me the list, I'll choose which to convert."
+
+- Option 1: run the Full Conversion pipeline once per paper, giving each a unique skill slug. Skip Step 2.5 (cost estimate) after the first paper — reuse the per-paper average.
+- Option 2: extract all papers together (Step 2), treat the combined text as one source, and generate a single skill with cross-paper synthesis in each section.
+- Option 3: list the detected PDFs with suggested slugs, let the user pick, then process only the selected ones.
+
 ---
 
 ## Skill Locations
@@ -40,7 +56,7 @@ For **generated** paper skills, pick a destination that the user's host agent ca
 
 ---
 
-## Step 0 — Out-of-scope check
+## Step 0 — Out-of-scope check + batch detection
 
 If no arguments are provided, stop and respond:
 > "paper-to-skill requires a PDF path, folder, or glob pattern. Usage: `paper-to-skill <path-to-pdf-folder-or-glob>... [skill-name-slug]`"
@@ -50,6 +66,42 @@ Throughout the workflow:
 - If the last argument is not a file, folder, or glob that exists or matches any files, and it looks like a skill slug (e.g. lowercase hyphens, alphanumeric), treat it as `SKILL_NAME`.
 - Treat all other arguments as the list of `INPUT_PATHS`.
 - If any input path is an existing skill directory (contains `SKILL.md` and a `sections/` sub-folder), or if `SKILL_NAME` matches an existing skill slug in `SKILLS_HOME`, flag this run as an **Update/Fold-in** operation (Mode 4).
+
+### Batch detection
+
+If any `INPUT_PATH` is a directory that contains **2 or more PDFs**, flag this as a potential **Batch Processing** run (Mode 5).
+
+- Count the PDFs in the directory (recursively, one level).
+- If ≥ 2 PDFs found and the user did NOT already specify a single skill slug → proceed to Step 0.5 (batch strategy prompt).
+- If the user DID specify a skill slug → they likely want one combined skill; confirm briefly ("Processing all `<N>` PDFs as one combined skill `<slug>`?") before proceeding with Mode 5 Option 2.
+- If only 1 PDF found in the directory → treat as a single-paper Full Conversion.
+
+### Step 0.5 — Batch strategy prompt (Mode 5 only)
+
+⛔ **BLOCKING.** When Mode 5 is detected, the agent MUST pause and present:
+
+> "This folder contains `<N>` PDFs. How should I process them?
+>
+> 1. **One skill per paper** — each paper gets its own skill at `$SKILLS_HOME/<paper-slug>/`. Best for independent papers with different topics.
+> 2. **One combined skill** — all papers merged into a single skill at `$SKILLS_HOME/<folder-name>/` with cross-paper synthesis. Best for papers on the same topic.
+> 3. **Let me pick** — I'll list the files; you choose which to convert."
+
+Wait for user choice. Then:
+- Option 1: set `BATCH_MODE=per_paper`. For each paper, run the Full Conversion pipeline (Steps 1–10) independently. Skip Step 2.5 after the first paper — show a running counter instead ("Processing 3/7: `<title>`…").
+- Option 2: set `BATCH_MODE=combined`. Set `SKILL_NAME=<folder-name>`. Run Steps 1–10 once with all PDFs together.
+- Option 3: list detected PDFs (filename + detected page count), ask user to confirm selection, then process selected papers with Option 1 strategy.
+
+**After batch completion**, report all generated skills:
+```
+✅ Batch complete: <N> of <M> papers converted
+
+Generated skills:
+  <skill_slug_1>  →  $SKILLS_HOME/<slug_1>/    (<N> sections)
+  <skill_slug_2>  →  $SKILLS_HOME/<slug_2>/    (<N> sections)
+  ...
+
+Call any skill by name: "Ask <slug> about <topic>"
+```
 
 ---
 
