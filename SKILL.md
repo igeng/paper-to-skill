@@ -15,7 +15,7 @@ Cross-agent notes (informational; ignored by host agents):
   - Compatible skill roots:
     Claude Code: ~/.claude/skills, .claude/skills
     OpenCode: ~/.opencode/skills, .opencode/skills
-  - Argument hint: <path-to-pdf-folder-or-glob>... [skill-name-slug]
+  - Argument hint: <path-to-pdf-folder-or-glob>... [skill-name-slug] [--output <output-dir>]
 -->
 
 # Paper-to-Skill Converter
@@ -110,12 +110,28 @@ Call with a topic: "Ask `llm-literature-review` how different papers handle posi
 
 ## Skill Destination
 
+Generated skills go to one of these locations:
+
 | Host agent | Personal root | Project-local root |
 |---|---|---|
-| **Claude Code** | `~/.claude/skills` | `.claude/skills` |
-| **OpenCode** | `~/.opencode/skills` | `.opencode/skills` |
+| **Claude Code** | `~/.claude/skills/` | `./.claude/skills/` |
+| **OpenCode** | `~/.opencode/skills/` | `./.opencode/skills/` |
 
-If exactly one host root exists, use it. If none exist, ask the user. If the skill name already exists, offer Update/Overwrite/Rename.
+### Output path resolution (BLOCKING — always confirm before generating)
+
+The agent MUST confirm the destination before writing any files. The resolution order is:
+
+1. **User specifies `--output <dir>`** → use `<dir>` directly. Prompt: "Skills will be saved to `<dir>`. OK?"
+2. **User says "save here" or "current directory"** → use `./.claude/skills/`
+3. **Auto-detect** → pick the first existing root from the table above. If none exist, ask the user. Prompt: "Skills will be saved to `<detected-root>/`. Is that OK? (Reply with a custom path to change it.)"
+
+The user can reply with a custom path at any point to override the destination. A relative path (e.g. `./my-skills/`) is resolved against the current working directory.
+
+### ⛔ BLOCKING rule
+
+**Never write skill files until the user has confirmed the output path.** Before Step 6, present:
+> "📁 Skills will be saved to: `<full-path>/`"
+> and wait for confirmation. The user can reply "yes" or specify a different path.
 
 ## Generated Skill Structure
 

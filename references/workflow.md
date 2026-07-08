@@ -59,7 +59,7 @@ For **generated** paper skills, pick a destination that the user's host agent ca
 ## Step 0 — Out-of-scope check + batch detection
 
 If no arguments are provided, stop and respond:
-> "paper-to-skill requires a PDF path, folder, or glob pattern. Usage: `paper-to-skill <path-to-pdf-folder-or-glob>... [skill-name-slug]`"
+> "paper-to-skill requires a PDF path, folder, or glob pattern. Usage: `paper-to-skill <path-to-pdf-folder-or-glob>... [skill-name-slug] [--output <output-dir>]`"
 
 Throughout the workflow:
 - Identify the input paths and the optional skill slug.
@@ -300,7 +300,9 @@ Use the answer to weight what gets highlighted in the SKILL.md Core section.
 
 ---
 
-## Step 5 — Determine skill name
+## Step 5 — Determine skill name + output path
+
+### 5a: Skill name
 
 If `SKILL_NAME` was provided, use it as the skill slug.
 Otherwise, propose two options and let the user choose:
@@ -309,24 +311,56 @@ Otherwise, propose two options and let the user choose:
 
 Default to author-concept format.
 
-Choose the destination skill root (`SKILLS_HOME`). Probe the user's filesystem:
+### 5b: Output path — ⛔ BLOCKING
 
-| Host agent | Personal skill root (probe in order) | Project-local root |
+**Never proceed to Step 6 until the user has confirmed the output path.** Resolve in this order:
+
+1. **User passed `--output <dir>`** → `SKILLS_HOME = <dir>` resolved to an absolute path.
+2. **User says "save here" or "current directory"** → use `./.claude/skills/`.
+3. **Auto-detect** → probe the filesystem for existing skill roots:
+
+| Host agent | Personal root | Project-local root |
 |---|---|---|
 | **Claude Code** | `~/.claude/skills` | `.claude/skills` |
 | **OpenCode** | `~/.opencode/skills` | `.opencode/skills` |
 
-Selection rules:
-1. If **exactly one** of the host's candidate roots exists on disk, use it without asking.
-2. If **none** exist (fresh machine), ask the user which root to create.
-3. If the user explicitly asked for project-local output, prefer the project-local row.
-4. If you cannot identify the host, ask: "Which agent are you running this in — Claude Code or OpenCode?"
+Pick the first existing root. If none exist, default to the personal root.
 
-Set `SKILLS_HOME` to the selected root and check if `$SKILLS_HOME/<skill_name>/` already exists.
-If it does, prompt the user to choose:
+### 5c: Confirm with user
+
+Before any files are written, present the user with the full destination:
+
+> "📁 Skill will be saved to: `<SKILLS_HOME>/<skill_name>/`
+>
+> Is that OK? Reply "yes" to continue, or type a different path."
+
+The user can reply with:
+- `yes` or `ok` → proceed
+- A custom path like `D:\my-skills\` → set `SKILLS_HOME` to that path and re-confirm the updated destination
+- A relative path like `./skills/` → resolve against cwd
+
+If the skill directory already exists, prompt:
 1. **Update / Fold-in** (Mode 4)
 2. **Overwrite**
 3. **Rename**
+
+---
+
+## Step 5.5 — Pre-generation confirmation summary
+
+⛔ **BLOCKING.** Present a final summary before generation begins:
+
+```
+📄 Paper: <title> — <author(s)>
+📐 Mode: <PAPER_TYPE> | Depth: <DEPTH>
+📁 Output: <SKILLS_HOME>/<skill_name>/
+💰 Est. cost: ~<N>K tokens (~$<X> USD)
+📑 <N> sections will be generated
+
+Proceed?
+```
+
+Wait for the user. Once confirmed, Steps 6–10 run without further pauses.
 
 ---
 
