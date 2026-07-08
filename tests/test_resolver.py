@@ -50,6 +50,106 @@ This is the reference section.
         assert result["sections_detected"] == 0
         assert not result["has_abstract"]
 
+    def test_has_toc_detection(self):
+        text = "Table of Contents\n1. Introduction\n2. Methods\n3. Results\n"
+        result = detect_paper_structure(text)
+        assert result["has_toc"]
+
+    def test_no_toc(self):
+        text = "Abstract\nIntroduction\nMethods\nResults"
+        result = detect_paper_structure(text)
+        assert not result["has_toc"]
+
+    # ── Multi-language section detection ──────────────────────────────────
+
+    def test_chinese_sections(self):
+        text = "摘要\n引言\n方法\n实验结果\n讨论\n结论\n参考文献"
+        result = detect_paper_structure(text)
+        assert result["has_abstract"]
+        assert result["has_references"]
+        assert result["sections_detected"] >= 4
+
+    def test_japanese_sections(self):
+        text = "要旨\nはじめに\n手法\n結果\n考察\n結論\n謝辞\n参考文献"
+        result = detect_paper_structure(text)
+        assert result["has_abstract"]
+        assert result["has_references"]
+        assert result["sections_detected"] >= 4
+
+    def test_german_sections(self):
+        text = "Zusammenfassung\nEinleitung\nMethoden\nErgebnisse\nDiskussion\nSchlussfolgerung\nLiteratur"
+        result = detect_paper_structure(text)
+        assert result["has_abstract"]
+        assert result["has_references"]
+
+    def test_french_sections(self):
+        text = "Résumé\nIntroduction\nMéthodes\nRésultats\nDiscussion\nConclusion\nRéférences"
+        result = detect_paper_structure(text)
+        assert result["has_abstract"]
+        assert result["has_references"]
+
+    def test_spanish_sections(self):
+        text = "Resumen\nIntroducción\nMétodos\nResultados\nDiscusión\nConclusión\nReferencias"
+        result = detect_paper_structure(text)
+        assert result["has_abstract"]
+        assert result["has_references"]
+
+    def test_portuguese_sections(self):
+        text = "Resumo\nIntrodução\nMétodos\nResultados\nDiscussão\nConclusão\nReferências"
+        result = detect_paper_structure(text)
+        assert result["has_abstract"]
+        assert result["has_references"]
+
+    # ── False positive guards ─────────────────────────────────────────────
+
+    def test_numbered_list_not_sections(self):
+        text = (
+            "1. This is item one of a list.\n"
+            "2. This is item two of a list.\n"
+            "3. This is item three.\n"
+        )
+        result = detect_paper_structure(text)
+        assert result["sections_detected"] == 0
+
+    def test_prose_cross_reference_not_section(self):
+        text = (
+            "Introduction explores the background of the problem.\n"
+            "Methods are described in detail below.\n"
+            "Results show significant improvements.\n"
+        )
+        result = detect_paper_structure(text)
+        assert result["sections_detected"] == 0
+
+    def test_numbered_section_still_detected(self):
+        text = "1. Introduction\nbody\n2. Methods\nbody\n3. Results\nbody"
+        result = detect_paper_structure(text)
+        assert result["sections_detected"] >= 3
+
+    def test_section_type_classification(self):
+        text = "Abstract\nIntroduction\nMethods\nResults\nDiscussion\nConclusion\nReferences"
+        result = detect_paper_structure(text)
+        types = result["section_types"]
+        assert types.get("abstract") == 1
+        assert types.get("intro") == 1
+        assert types.get("methods") == 1
+        assert types.get("results") == 1
+        assert types.get("discussion") == 1
+        assert types.get("conclusion") == 1
+        assert types.get("references") == 1
+
+    # ── Chapter fallback for theses ───────────────────────────────────────
+
+    def test_chapter_fallback_for_thesis(self):
+        text = "Chapter 1: Introduction\nbody\nChapter 2: Background\nbody\nChapter 3: Method\nbody"
+        result = detect_paper_structure(text)
+        assert result["sections_detected"] == 3
+
+    def test_markdown_section_fallback(self):
+        text = "# Title\n\n## Section One\nbody\n\n## Section Two\nbody\n\n## Section Three\nbody"
+        result = detect_paper_structure(text)
+        # Falls back to structural heading count when no explicit sections found
+        assert result["sections_detected"] >= 2
+
 
 class TestParseArguments:
     def test_basic(self):

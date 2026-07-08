@@ -357,16 +357,20 @@ Create `$SKILLS_HOME/<skill_name>/methods.md`:
 ### cheatsheet.md
 Create `$SKILLS_HOME/<skill_name>/cheatsheet.md`:
 
-**This is the most differentiated layer of the skill — treat it as a reasoning aid, not a keyword list.**
+**This is the most differentiated layer of the skill — treat it as a reasoning aid, not a keyword list.** Anyone can grep the glossary for a term. The cheatsheet captures the authors' *judgment*: the decisions they'd make and why. It's the file that turns "I know the words" into "I'd act the way the authors would."
 
 Prioritize, in order:
-1. **Decision rules** — "When X, use method Y, because Z." The conditional logic for applying the paper's methods.
-2. **Comparison tables** — competing methods/approaches scored on dimensions the authors evaluate.
-3. **Key results summary** — the headline numbers and what they mean practically.
-4. **Hyperparameter guidance** — specific numbers, thresholds, or defaults from the paper.
-5. **Reproducibility notes** — what you need to replicate the results (data, compute, libraries).
+1. **Decision rules** — "When X, use method Y, because Z." The if/then logic the authors apply, stated so the reader can apply it without re-reading the paper.
+2. **Decision trees / flowcharts** (as nested bullets or a small table) — for choices with more than two branches.
+3. **Trade-off matrices** — competing methods/approaches scored on dimensions the authors evaluate, so the reader can pick under their own constraints.
+4. **Thresholds & defaults** — the specific numbers, ratios, or rules of thumb the authors commit to (e.g. "learning rate = 3e-4", "beam size = 4", "dropout = 0.1").
+5. **Tells & smells** — fast heuristics for recognizing a situation ("if you see X, you're probably in trouble Y", "when metric A drops below B, switch to method C").
+6. **Key results summary** — the headline numbers and what they mean practically.
+7. **Reproducibility notes** — what you need to replicate the results (data, compute, libraries).
 
-- Format mostly as compact tables and decision rules.
+Avoid: bare term→definition rows (that's the glossary), and prose paragraphs (that's the sections). Every line should help the reader *decide* something.
+
+- Format mostly as compact tables and decision rules; the content you'd want on a single printed page kept beside you while working.
 - Max 1,200 tokens.
 
 ---

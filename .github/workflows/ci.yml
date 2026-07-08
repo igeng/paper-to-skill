@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package (no optional deps)
+        run: pip install .
+      - name: Install pytest
+        run: pip install pytest
+      - name: Run test suite
+        run: pytest tests/ -q
+
+  lint:
+    name: lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: pip install ruff
+      - name: Ruff check
+        run: ruff check --select E9,F --target-version py39 paper_to_skill/ scripts/ tests/ tools/
+
+  smoke:
+    name: smoke (dependency-free extraction)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Install package
+        run: pip install .
+      - name: Extract a sample PDF with no optional deps
+        run: |
+          set -euo pipefail
+          # Create a minimal PDF file for smoke testing
+          python3 -c "
+          buf = b'%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj\nxref\n0 4\n0000000000 65535 f\n0000000009 00000 n\n0000000058 00000 n\n0000000115 00000 n\ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n206\n%%EOF'
+          with open('sample.pdf', 'wb') as f:
+              f.write(buf)
+          "
+          export PAPER_SKILL_WORKDIR="$RUNNER_TEMP/work"
+          python3 scripts/extract.py sample.pdf --mode text --install-missing no
+          test -f "$PAPER_SKILL_WORKDIR/full_text.txt"
+          test -f "$PAPER_SKILL_WORKDIR/metadata.json"
+
+  validate-skill:
+    name: validate SKILL.md (Claude Code rules)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Audit SKILL.md against Claude Code skill rules
+        run: python3 tools/validate_skill.py SKILL.md

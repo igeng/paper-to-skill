@@ -1,7 +1,13 @@
 ---
 name: paper-to-skill
 description: "Converts research paper PDFs into structured agent skills, extracting research questions, hypotheses, methodology, key findings, contributions, and limitations. Use when the user wants to study a paper through Claude Code or OpenCode, apply a paper's methods or frameworks while working, or build a reusable knowledge base from academic literature."
-allowed-tools: [Bash, Read, Write, Edit, Glob, Grep]
+allowed-tools:
+- Bash
+- Read
+- Write
+- Edit
+- Glob
+- Grep
 ---
 
 <!--

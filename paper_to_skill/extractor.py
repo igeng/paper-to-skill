@@ -27,10 +27,18 @@ def extract_single_file(
         raise ExtractionError(f"File not found: {input_str}")
 
     ext = input_path.suffix.lower()
+
+    # Sniff magic bytes: treat unknown extensions as PDF when the header matches.
     if ext != ".pdf":
-        raise ExtractionError(
-            f"Unsupported format '{ext}'. paper-to-skill only supports PDF files."
-        )
+        with open(input_str, "rb") as f:
+            header = f.read(8)
+        if header[:4] == b"%PDF":
+            print(f"  [info] extension '{ext}' does not match content — treating as PDF")
+            ext = ".pdf"
+        else:
+            raise ExtractionError(
+                f"Unsupported format '{ext}'. paper-to-skill only supports PDF files."
+            )
 
     prepare_dependencies(extraction_mode, install_mode)
 
